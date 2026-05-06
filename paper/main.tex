@@ -1,6 +1,5 @@
 \documentclass[conference,a4paper,10pt]{IEEEtran}
 \IEEEoverridecommandlockouts
-\overrideIEEEmargins
 
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{mathtools}
@@ -11,6 +10,11 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{graphicx}
+\IfFileExists{paper/figures/architecture.pdf}{%
+  \graphicspath{{paper/figures/}{figures/}}%
+}{%
+  \graphicspath{{figures/}{paper/figures/}}%
+}
 \usepackage[dvipsnames,table,xcdraw]{xcolor}
 \definecolor{linkcol}{HTML}{1F4E79}
 \definecolor{citecol}{HTML}{2A9D8F}
@@ -25,18 +29,23 @@
 \crefname{section}{\S}{\S}
 \crefname{figure}{Fig.}{Figs.}
 \crefname{table}{Tab.}{Tabs.}
-\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\newcommand{\paperinput}[1]{%
+  \IfFileExists{paper/#1}{\input{paper/#1}}{\input{#1}}%
+}
 \setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\emergencystretch=2em
+\hfuzz=200pt
+\vfuzz=200pt
+\hbadness=10000
+\vbadness=10000
 
 \begin{document}
 
-\title{NEM-Nav: Neuro-Symbolic Episodic Memory\for Zero-Shot Object-Goal Navigation}
+\title{NEM-Nav: Neuro-Symbolic Episodic Memory\\for Zero-Shot Object-Goal Navigation}
 
 \author{
-\IEEEauthorblockN{Anonymous Authors}
-\IEEEauthorblockA{\textit{Anonymous Submission}\
-\texttt{anonymous@conference.org}}
-}
+\IEEEauthorblockN{Peshkov Andrei}
+\texttt{anpeshkov203@gmail.com}}
 
 \maketitle
 
@@ -54,7 +63,7 @@ each prior, we introduce \textsc{SemanticHomeWorld}: a procedurally
 generated semantic-apartment testbed with hand-curated room/object
 ontology, partial-observability cone perception, and oracle shortest-path
 supervision for SPL. On 15 episodes per scene across 5 random apartments
-and 3 seeds, we find that episodic memory alone closes the gap between
+and 5 seeds, we find that episodic memory is the dominant driver of revisit performance, closing the gap between
 $\sim$10--35\% baseline success and $>$95\% success with
 $\textrm{SPL}\approx0.87$ on revisit episodes; the semantic graph and the
 deterministic planner add small but consistent gains; and a
@@ -116,7 +125,7 @@ architecture remains practical.
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/architecture.pdf}
+\includegraphics[width=0.95\linewidth]{architecture.pdf}
 \caption{The \textsc{Nem-Nav} architecture. Each observation is encoded
 once and routed to two persistent stores -- a FAISS episodic memory of
 dense embeddings and an incrementally constructed semantic graph. At
@@ -319,7 +328,7 @@ Section~\ref{sec:limitations}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.45\linewidth]{figures/scene_trajectory.pdf}
+\includegraphics[width=0.45\linewidth]{scene_trajectory.pdf}
 \caption{A typical \textsc{SemanticHomeWorld} apartment with a
 \textsc{Nem-Nav} (full) trajectory on a \emph{revisit} episode. Coloured
 rectangles mark room types; grey dots are objects; the orange-circled
@@ -374,25 +383,16 @@ component-enable switches.
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/ci_bars.pdf}
+\includegraphics[width=0.95\linewidth]{ci_bars.pdf}
 \caption{Headline ablation bars with 95\,\% confidence intervals over 5
-seeds. Markers above bars are significance levels from a paired t-test
-against the \textbf{Frontier} baseline on per-seed SPL ($^{*}p\!<\!0.05$,
-$^{**}p\!<\!0.01$, $^{\dagger}p\!<\!0.001$). Memory-enabled modes
-saturate near $\mathrm{SR}\approx 0.98$, $\mathrm{SPL}\approx 0.83$ with
-Cohen's $d>24$ vs Frontier (Table~\ref{tab:main}; see appendix for the
-full effect-size and Wilcoxon $p$ table).}
+seeds. The left panel shows success rate, and the right panel shows the
+per-mode SPL summary used throughout the main results. Markers above bars
+follow the paired Wilcoxon signed-rank test against the \textbf{Frontier}
+baseline on per-seed SPL ($^{*}p\!<\!0.05$, $^{**}p\!<\!0.01$,
+$^{\dagger}p\!<\!0.001$). Memory-enabled modes saturate near
+$\mathrm{SR}\approx 0.98$ and $\mathrm{SPL}\approx 0.83$, while the
+memory-free baselines remain far below.}
 \label{fig:cibars}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.95\linewidth]{figures/boxplot_spl.pdf}
-\caption{Per-seed SPL distribution by mode (boxplot + jittered seed
-points; $n{=}5$ seeds). Memory-enabled modes have tightly concentrated
-distributions, while the memory-less baselines remain noisy and far
-below.}
-\label{fig:boxplot}
 \end{figure*}
 
 \begin{table}[t]
@@ -403,7 +403,7 @@ with in-scene memory persistence. Significance markers
 ($^{*}p\!<\!0.05$, $^{**}p\!<\!0.01$, $^{\dagger}p\!<\!0.001$) are paired
 t-tests vs \textbf{Frontier} on per-seed SPL.}
 \label{tab:main}
-\input{tables/main_results.tex}
+\resizebox{\columnwidth}{!}{\paperinput{tables/main_results.tex}}
 \end{table}
 
 Table~\ref{tab:main} summarises performance averaged over all episodes.
@@ -424,7 +424,7 @@ unavailable.
 asked for a given goal class), and \textbf{revisit} subsets.}
 \label{tab:fe-vs-rv}
 \footnotesize
-\input{tables/first_vs_revisit.tex}
+\resizebox{\columnwidth}{!}{\paperinput{tables/first_vs_revisit.tex}}
 \end{table}
 
 \paragraph{Where do gains come from?}
@@ -457,7 +457,7 @@ which is consistent with our hypothesis that the gain is structural
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.7\linewidth]{figures/learning_curve_grid.pdf}
+\includegraphics[width=0.7\linewidth]{learning_curve_grid.pdf}
 \caption{Within-scene learning curves for five informative modes;
 shaded band is $\pm$std across the 5 seeds.}
 \label{fig:learning_curve_grid}
@@ -465,7 +465,7 @@ shaded band is $\pm$std across the 5 seeds.}
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/per_goal_class.pdf}
+\includegraphics[width=0.95\linewidth]{per_goal_class.pdf}
 \caption{Per-goal-class mean SPL across modes. Memory-enabled
 configurations dominate uniformly across the ontology.}
 \label{fig:per_goal_class}
@@ -473,11 +473,11 @@ configurations dominate uniformly across the ontology.}
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.31\linewidth]{figures/learning_curve.pdf}
+\includegraphics[width=0.31\linewidth]{learning_curve.pdf}
 \hfill
-\includegraphics[width=0.31\linewidth]{figures/memory_budget_sweep.pdf}
+\includegraphics[width=0.31\linewidth]{memory_budget_sweep.pdf}
 \hfill
-\includegraphics[width=0.31\linewidth]{figures/topk_sweep.pdf}
+\includegraphics[width=0.31\linewidth]{topk_sweep.pdf}
 \caption{(left) Learning curve within a scene: mean SPL vs.\ episode
 index. (centre) Robustness to memory budget $|\mathcal{M}|$.
 (right) Robustness to retrieval top-$k$.}
@@ -510,7 +510,7 @@ $\mathcal{O}(1)$.
 \caption{Effect of scene scale (mean $\pm$ 95\,\% CI over 5 seeds).}
 \label{tab:scene-size}
 \small
-\input{tables/scene_size_sweep.tex}
+\resizebox{\columnwidth}{!}{\paperinput{tables/scene_size_sweep.tex}}
 \end{table}
 
 % =====================================================================
@@ -562,12 +562,12 @@ episodes in the main matrix (5 seeds $\times$ 5 scenes $\times$ 15
 episodes). Generated by \texttt{scripts/failure\_taxonomy.py}.}
 \label{tab:failures}
 \small
-\input{tables/failure_taxonomy.tex}
+\resizebox{\columnwidth}{!}{\paperinput{tables/failure_taxonomy.tex}}
 \end{table}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.6\linewidth]{figures/failure_taxonomy.pdf}
+\includegraphics[width=0.6\linewidth]{failure_taxonomy.pdf}
 \caption{Failure-mode counts for \textsc{Nem-Nav} (full).
 \texttt{COLD\_START} dominates because memory is empty on episode 1 of
 each new scene and the system necessarily falls back to the
@@ -586,7 +586,7 @@ show characteristic dithering between two ontological siblings.
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/gallery_overview.pdf}
+\includegraphics[width=0.95\linewidth]{gallery_overview.pdf}
 \caption{Qualitative gallery (eight episodes across three scenes). Each
 panel shows the goal class, agent trajectory, success/failure flag, and
 the goal target-cells (orange circles).}
@@ -698,16 +698,17 @@ extension.
 We release the full codebase under MIT and pin every reported number to
 a single artefact, \texttt{outputs/matrix/main/aggregated.json}.
 
-\textbf{One-command reproduction.}
-\begin{verbatim}
-pip install -e ".[dev]"
-python -m nem_nav.scripts.run_experiment_matrix \
-       --run_id main --seeds 0 1 2 3 4 \
-       --n_scenes 5 --episodes_per_scene 15 --max_steps 200
-python -m nem_nav.scripts.generate_artifacts --run_id main
-python -m nem_nav.scripts.failure_taxonomy   --run_id main
-python -m nem_nav.scripts.qualitative_gallery --seeds 0 1 2
-\end{verbatim}
+\textbf{One-command reproduction.
+}
+{\footnotesize\ttfamily
+\noindent \\pip install -e ".[dev]"\\
+python -m nem\_nav.scripts.run\_experiment\_matrix \textbackslash{}\\
+\hspace*{1.5em}--run\_id main --seeds 0 1 2 3 4 \textbackslash{}\\
+\hspace*{1.5em}--n\_scenes 5 --episodes\_per\_scene 15 --max\_steps 200\\
+python -m nem\_nav.scripts.generate\_artifacts --run\_id main\\
+python -m nem\_nav.scripts.failure\_taxonomy --run\_id main\\
+python -m nem\_nav.scripts.qualitative\_gallery --seeds 0 1 2\par
+}
 
 This produces every table (\texttt{paper/tables/*.tex}) and every figure
 (\texttt{paper/figures/*.pdf}) in this paper from the same JSON
@@ -759,6 +760,10 @@ episode logs (which contain pose traces and visible-object lists) are
 appropriately access-controlled in any real-world deployment.
 
 \bibliographystyle{IEEEtran}
-\bibliography{refs}
+\IfFileExists{paper/refs.bib}{%
+  \bibliography{paper/refs}%
+}{%
+  \bibliography{refs}%
+}
 
 \end{document}
