@@ -1,12 +1,17 @@
-\documentclass{article}
-\usepackage[final]{neurips_2024}
+\documentclass[conference,a4paper,10pt]{IEEEtran}
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
 
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
 \usepackage{algorithm}
-\usepackage{algpseudocode}
-\usepackage{multirow}
-\usepackage{enumitem}
+\usepackage[noend]{algpseudocode}
 \usepackage{booktabs}
-\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage[dvipsnames,table,xcdraw]{xcolor}
 \definecolor{linkcol}{HTML}{1F4E79}
 \definecolor{citecol}{HTML}{2A9D8F}
 \definecolor{urlcol}{HTML}{B85C00}
@@ -14,17 +19,25 @@
             linkcolor=linkcol,
             citecolor=citecol,
             urlcolor=urlcol,
-            bookmarksnumbered=true]{hyperref}
-\usepackage{graphicx}
-
-\title{NEM-Nav: Neuro-Symbolic Episodic Memory \\ for Zero-Shot Object-Goal Navigation}
-
-\author{%
-  Anonymous Authors\\
-  \texttt{anonymous@conference.org}
-}
+            bookmarksnumbered=true,
+            breaklinks=true]{hyperref}
+\usepackage{cleveref}
+\crefname{section}{\S}{\S}
+\crefname{figure}{Fig.}{Figs.}
+\crefname{table}{Tab.}{Tabs.}
+\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
 
 \begin{document}
+
+\title{NEM-Nav: Neuro-Symbolic Episodic Memory\for Zero-Shot Object-Goal Navigation}
+
+\author{
+\IEEEauthorblockN{Anonymous Authors}
+\IEEEauthorblockA{\textit{Anonymous Submission}\
+\texttt{anonymous@conference.org}}
+}
+
 \maketitle
 
 \begin{abstract}
@@ -63,8 +76,8 @@ time}: (i) a generic exploration prior over the geometry of indoor
 spaces, (ii) a semantic prior linking goal text to likely visual
 contexts, and (iii) an episodic prior accumulated across episodes within
 the same building. Recent zero-shot navigation systems lean heavily on
-either large vision--language models~\citep{majumdar2022zson, gadre2023cows}
-or instruction-tuned planners~\citep{zhou2023esc, dorbala2023llmnav};
+either large vision--language models~\cite{majumdar2022zson, gadre2023cows}
+or instruction-tuned planners~\cite{zhou2023esc, dorbala2023llmnav};
 fewer works systematically isolate the marginal contribution of each
 prior, in part because doing so requires a tightly controlled
 benchmarking environment and a unified architecture under which every
@@ -101,7 +114,7 @@ memory pruning ($\geq$256 items) and to small retrieval top-$k$
 ($k\geq3$), suggesting that under modest compute budgets the proposed
 architecture remains practical.
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/architecture.pdf}
 \caption{The \textsc{Nem-Nav} architecture. Each observation is encoded
@@ -114,7 +127,7 @@ $S(c)$ shown in the figure. Setting any weight to zero recovers the
 corresponding ablation; the same code path runs every reported
 configuration.}
 \label{fig:architecture}
-\end{figure}
+\end{figure*}
 
 % =====================================================================
 \section{Related Work}
@@ -122,30 +135,30 @@ configuration.}
 
 \paragraph{Object-goal navigation.}
 Classical pipelines combine geometric mapping with frontier
-exploration~\citep{yamauchi1997frontier} and a goal classifier; recent
+exploration~\cite{yamauchi1997frontier} and a goal classifier; recent
 zero-shot systems replace the classifier with vision--language
-models~\citep{majumdar2022zson, gadre2023cows, zhou2023esc} or query
-LLMs for high-level subgoals~\citep{dorbala2023llmnav,
+models~\cite{majumdar2022zson, gadre2023cows, zhou2023esc} or query
+LLMs for high-level subgoals~\cite{dorbala2023llmnav,
 huang2022innermono}. These works typically optimise a pipeline as a
 whole; our focus is to expose the marginal value of each prior under a
 single architecture.
 
 \paragraph{Episodic memory in navigation.}
 Episodic-memory architectures range from per-step transformer
-caches~\citep{fang2019smt, fukushima2022ohm} to FAISS-backed retrieval
-buffers~\citep{khandelwal2022clipnav, savinov2018sptm}. Our memory uses
+caches~\cite{fang2019smt, fukushima2022ohm} to FAISS-backed retrieval
+buffers~\cite{khandelwal2022clipnav, savinov2018sptm}. Our memory uses
 the latter and stores observation embeddings together with metadata
 useful for downstream scoring (pose, room label, visible objects).
 
 \paragraph{Topological maps.}
 Topological abstractions have a long history in robotics
-\citep{chaplot2020topological, savinov2018sptm}; here we use a simple
+\cite{chaplot2020topological, savinov2018sptm}; here we use a simple
 incremental graph constructed online from observation clusters, with
 optional semantic-affinity edges. The novelty is not the graph itself
 but its role as a clean ablation handle in the architecture.
 
 \paragraph{Language-conditioned planning.}
-Prompted-LLM planners are now standard~\citep{zhou2023esc,
+Prompted-LLM planners are now standard~\cite{zhou2023esc,
 dorbala2023llmnav, huang2022innermono}. Our system exposes both a
 deterministic structured planner and an LLM wrapper interface; the
 deterministic planner serves as a \emph{strong, reproducible substitute}
@@ -188,12 +201,12 @@ unit vectors of equal dimensionality. Two backends are provided. The
 default \emph{ontology backend} derives 32-dimensional embeddings from a
 hand-curated room/object affinity matrix via SVD, ensuring deterministic
 semantics for controlled experiments. A second \emph{OpenCLIP} backend
-loads a frozen ViT-B/32 with a one-line code change. All downstream
+loads a frozen ViT-B/32~\cite{radford2021clip} with a one-line code change. All downstream
 modules consume only the unit-vector outputs.
 
 \subsection{Episodic Memory and Retrieval}
 
-Memory $\mathcal{M}$ is a FAISS \texttt{IndexFlatIP} (cosine similarity
+Memory $\mathcal{M}$ is a FAISS~\cite{johnson2019faiss} \texttt{IndexFlatIP} (cosine similarity
 via inner product on normalised vectors) with strict metadata
 alignment: pruning rebuilds the index over the kept rows so the
 embedding $\leftrightarrow$ metadata mapping is invariant by
@@ -294,7 +307,7 @@ oracle shortest-path length to the closest target is computed by BFS
 and used for SPL. Success requires the agent to issue \texttt{stop}
 within $L_\infty$-radius 1 of any target.
 
-\textbf{Why a controlled testbed?}  Replacing Habitat-Sim with a small
+\textbf{Why a controlled testbed?}  Replacing Habitat-Sim~\cite{savva2019habitat} with a small
 procedural environment removes confounds: every component
 (perception, retrieval, graph, planner) can be ablated without retraining
 or scene-specific tuning, and the same code path runs on CPU in minutes,
@@ -329,7 +342,7 @@ persist across episodes within a scene, mirroring lifelong navigation in
 a single building) -- 375 episodes per (mode, seed) cell, 15{,}000
 episodes total across the main matrix. Goal categories are sampled
 uniformly over the classes present in each scene. We report Success Rate
-(SR), SPL~\citep{anderson2018evaluation}, mean distance to goal at
+(SR), SPL~\cite{anderson2018evaluation}, mean distance to goal at
 episode end (DTG), and average path length (Steps).
 
 \paragraph{Statistical reporting.}
@@ -359,7 +372,7 @@ component-enable switches.
 \subsection{Main Results}
 \label{sec:main-results}
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/ci_bars.pdf}
 \caption{Headline ablation bars with 95\,\% confidence intervals over 5
@@ -370,9 +383,9 @@ saturate near $\mathrm{SR}\approx 0.98$, $\mathrm{SPL}\approx 0.83$ with
 Cohen's $d>24$ vs Frontier (Table~\ref{tab:main}; see appendix for the
 full effect-size and Wilcoxon $p$ table).}
 \label{fig:cibars}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/boxplot_spl.pdf}
 \caption{Per-seed SPL distribution by mode (boxplot + jittered seed
@@ -380,7 +393,7 @@ points; $n{=}5$ seeds). Memory-enabled modes have tightly concentrated
 distributions, while the memory-less baselines remain noisy and far
 below.}
 \label{fig:boxplot}
-\end{figure}
+\end{figure*}
 
 \begin{table}[t]
 \centering
@@ -442,23 +455,23 @@ modes; memory-enabled modes dominate uniformly across the ontology,
 which is consistent with our hypothesis that the gain is structural
 (``remember any object class'') rather than class-specific.
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.7\linewidth]{figures/learning_curve_grid.pdf}
 \caption{Within-scene learning curves for five informative modes;
 shaded band is $\pm$std across the 5 seeds.}
 \label{fig:learning_curve_grid}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/per_goal_class.pdf}
 \caption{Per-goal-class mean SPL across modes. Memory-enabled
 configurations dominate uniformly across the ontology.}
 \label{fig:per_goal_class}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.31\linewidth]{figures/learning_curve.pdf}
 \hfill
@@ -469,7 +482,7 @@ configurations dominate uniformly across the ontology.}
 index. (centre) Robustness to memory budget $|\mathcal{M}|$.
 (right) Robustness to retrieval top-$k$.}
 \label{fig:learning}
-\end{figure}
+\end{figure*}
 
 \subsection{Sensitivity Studies}
 
@@ -571,14 +584,14 @@ recalls the goal class within one or two retrievals and proceeds along
 the BFS-shortest path on the cumulative observed map. Failure cases
 show characteristic dithering between two ontological siblings.
 
-\begin{figure}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/gallery_overview.pdf}
 \caption{Qualitative gallery (eight episodes across three scenes). Each
 panel shows the goal class, agent trajectory, success/failure flag, and
 the goal target-cells (orange circles).}
 \label{fig:gallery}
-\end{figure}
+\end{figure*}
 
 % =====================================================================
 \section{System Implementation and Backend Status}
@@ -745,7 +758,7 @@ occupants \emph{cheaper}; deployers should consider whether the per-
 episode logs (which contain pose traces and visible-object lists) are
 appropriately access-controlled in any real-world deployment.
 
-\bibliographystyle{plain}
+\bibliographystyle{IEEEtran}
 \bibliography{refs}
 
 \end{document}
