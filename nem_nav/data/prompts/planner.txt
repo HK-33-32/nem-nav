@@ -1,0 +1,16 @@
+You are a deterministic indoor-navigation planner. Given a goal and a list
+of relevant past observations, respond with ONLY a JSON object with the
+following exact keys:
+
+  - target_room: a single room type (string) or null
+  - confidence:  a float in [0, 1]
+  - rationale:   a one-sentence explanation (string)
+  - bias_direction: a 2-element array [dr, dc] (unit vector, agent-relative)
+                    or null
+
+Goal: {goal}
+
+Retrieved memories:
+{memories}
+
+Output JSON now:

@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nem-nav"
+version = "0.1.0"
+description = "NEM-Nav: Neuro-Symbolic Episodic Memory for Zero-Shot Object-Goal Navigation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Anonymous Authors" }]
+keywords = ["embodied-ai", "navigation", "object-goal-navigation", "vlm", "episodic-memory"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.24",
+    "faiss-cpu>=1.7",
+    "torch>=2.0",
+    "networkx>=3.0",
+    "matplotlib>=3.7",
+    "pyyaml>=6.0",
+    "tqdm>=4.65",
+    "scipy>=1.10",
+    "scikit-learn>=1.3",
+    "pandas>=2.0",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+# Real CLIP backend (replaces OntologyVLMEncoder).
+openclip = ["open_clip_torch>=2.20"]
+
+# Local quantized LLM planner backend.
+llm = ["llama-cpp-python>=0.2"]
+
+# Habitat backend for the env layer. Linux + CUDA only — install per official
+# instructions (conda or source build) and treat the pip names below as a
+# placeholder pin; CI does not exercise this group.
+habitat = [
+    "habitat-sim>=0.3",
+    "habitat-lab>=0.3",
+]
+
+# Developer tooling: tests + linters used by CI.
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.1",
+    "ruff>=0.5",
+    "black>=24.0",
+]
+
+[project.urls]
+Repository = "https://github.com/anonymous/nem-nav"
+
+[tool.setuptools.packages.find]
+include = ["nem_nav*"]
+exclude = ["nem_nav.tests*", "outputs*", "paper*", "data*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["outputs", "paper", "data"]
+
+[tool.ruff.lint]
+# Conservative ruleset: fail on real bugs and unused imports, but don't churn
+# the existing style. We intentionally drop UP (pyupgrade) and I (isort)
+# because they would diff most files for no functional reason.
+select = ["E", "F", "W", "B"]
+ignore = [
+    "E501",  # long lines (we keep some long doc strings as-is)
+    "B008",  # mutable default args (used in dataclasses with field(default_factory=...))
+    "B905",  # zip(...) without strict=; not worth the churn in research code
+    "B007",  # unused loop variable; harmless and common in numpy iteration
+    "E741",  # ambiguous variable names like `l` are acceptable in math code
+]
+
+[tool.ruff.lint.per-file-ignores]
+"nem_nav/tests/*" = ["B011"]  # allow `assert False` in tests
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311"]
+extend-exclude = "outputs|paper|data"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["nem_nav/tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "habitat: tests that require habitat-sim and an HM3D/MP3D dataset",
+    "openclip: tests that require open_clip_torch",
+    "llm: tests that require llama-cpp-python and a GGUF model on disk",
+]

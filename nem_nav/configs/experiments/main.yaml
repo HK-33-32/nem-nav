@@ -1,0 +1,24 @@
+# Default configuration for the main experiment matrix.
+env:
+  size: 24
+  n_rooms_target: 6
+  view_radius: 4
+  view_cone_deg: 90.0
+  max_steps: 200
+
+policy:
+  retrieval_top_k: 5
+  memory_budget: 10000
+  planner_every_n_steps: 8
+  candidate_radius: 6
+  weights:
+    frontier: 1.0
+    semantic: 1.5
+    memory: 1.0
+    graph: 0.5
+    planner: 0.8
+
+evaluation:
+  n_scenes: 5
+  episodes_per_scene: 15
+  seeds: [0, 1, 2]

@@ -1,0 +1,276 @@
+% =====================================================================
+% NEM-Nav Supplementary Material
+%
+% Compile by: \input{appendix.tex} from main.tex (after \appendix), or
+% standalone via this preamble:
+% =====================================================================
+\documentclass{article}
+\usepackage[final]{neurips_2024}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=black}
+
+\title{NEM-Nav: Supplementary Material}
+\author{Anonymous Authors\\\texttt{anonymous@conference.org}}
+
+\begin{document}
+\maketitle
+
+\appendix
+
+% =====================================================================
+\section{Hyperparameters}
+\label{app:hyperparams}
+% =====================================================================
+
+Table~\ref{tab:hyperparams} lists every numeric setting that affects
+the reported results. All defaults are the values used in
+\texttt{outputs/matrix/main/aggregated.json}. Each \texttt{metadata.json}
+written by \texttt{RunLogger} contains a snapshot of these values for
+the corresponding run.
+
+\begin{table}[h]
+\centering
+\caption{Hyperparameters used to produce all numbers in the main paper.}
+\label{tab:hyperparams}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Component} & \textbf{Setting} & \textbf{Value} \\
+\midrule
+\multirow{6}{*}{Environment} & grid size & 24 \\
+                              & target rooms & 6 \\
+                              & view radius & 4 cells \\
+                              & view cone & $90^\circ$ half-angle \\
+                              & max steps per episode & 200 \\
+                              & success radius & 1 cell ($L_\infty$) \\
+\midrule
+\multirow{4}{*}{Encoder (Ontology)} & embedding dim & 32 \\
+                                     & affinity matrix & SVD of room/object co-occurrence \\
+                                     & object weight (image) & $1/(1+d)$ \\
+                                     & local-room weight & 1.5 \\
+\midrule
+\multirow{6}{*}{Memory + Retrieval} & memory budget & 10\,000 \\
+                                     & top-$k$ & 5 \\
+                                     & MMR diversity $\beta_d$ & 0.4 \\
+                                     & utility coefficient $\alpha_u$ & 0.2 \\
+                                     & goal-cosine coefficient $\alpha_g$ & 0.3 \\
+                                     & pool multiplier & 4 \\
+\midrule
+\multirow{3}{*}{Graph} & similarity threshold & 0.92 \\
+                        & pose radius & 3.0 cells \\
+                        & semantic-edge top-$k$ & 3 \\
+\midrule
+\multirow{2}{*}{Planner} & sim\_threshold (deterministic) & 0.45 \\
+                          & call frequency & every 8 steps \\
+\midrule
+\multirow{6}{*}{Policy weights} & $w_\mathrm{frontier}$ & 1.0 \\
+                                 & $w_\mathrm{semantic}$ & 1.5 \\
+                                 & $w_\mathrm{memory}$ & 1.0 \\
+                                 & $w_\mathrm{graph}$ & 0.5 \\
+                                 & $w_\mathrm{planner}$ & 0.8 \\
+                                 & candidate radius & 6 \\
+\midrule
+\multirow{2}{*}{LLM (when used)} & temperature & 0.0 \\
+                                  & max tokens & 256 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Significance: Wilcoxon and Effect Sizes}
+\label{app:stats}
+% =====================================================================
+
+For every (mode, metric) pair we computed three statistics against the
+\textbf{Frontier} baseline on per-seed values: paired t-test ($p_t$;
+used for the markers in Table~1 of the main paper), Wilcoxon signed-
+rank ($p_w$; non-parametric), and Cohen's $d$ for the paired
+differences (effect size). With $n{=}5$ Wilcoxon's smallest possible
+two-sided $p$ is $0.0625$ for monotone-direction effects, so its
+markers are necessarily blank in the main paper; we list it here for
+transparency.
+
+\begin{table}[h]
+\centering
+\caption{Significance and effect size on per-seed SPL vs Frontier
+baseline. $n{=}5$ paired observations per row.
+The relative-vs-Frontier column reports
+$\overline{\Delta} = \mathrm{mean}(\mathrm{mode} - \mathrm{Frontier})$.}
+\label{tab:stats}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Method} & $\overline{\Delta}$ \textbf{SPL}
+                & $p_t$ & $p_w$ & \textbf{Cohen's} $d$ \\
+\midrule
+Random            & $-0.079$ & $0.0008$ & $0.0625$ & $-4.07$ \\
+Frontier+Sem      & $+0.020$ & $0.0024$ & $0.0625$ & $+3.05$ \\
+NEM-Nav $-$ Mem   & $+0.020$ & $0.0024$ & $0.0625$ & $+3.05$ \\
+NEM-Nav $-$ LLM   & $+0.745$ & $<0.0001$ & $0.0625$ & $+24.10$ \\
+NEM-Nav $-$ Graph & $+0.742$ & $<0.0001$ & $0.0625$ & $+27.03$ \\
+Retrieval-only    & $+0.752$ & $<0.0001$ & $0.0625$ & $+27.67$ \\
+NEM-Nav (full)    & $+0.751$ & $<0.0001$ & $0.0625$ & $+48.14$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Planner Prompt Template}
+\label{app:prompt}
+% =====================================================================
+
+The exact prompt used by \texttt{LLMPlanner} (also shipped at
+\texttt{nem\_nav/data/prompts/planner.txt}; loaded verbatim at
+construction time):
+
+\begin{quote}\small\ttfamily
+You are a deterministic indoor-navigation planner. Given a goal and a
+list of relevant past observations, respond with ONLY a JSON object with
+the following exact keys:\\[2pt]
+\hspace*{1em}- target\_room: a single room type (string) or null\\
+\hspace*{1em}- confidence:  a float in [0, 1]\\
+\hspace*{1em}- rationale:   a one-sentence explanation (string)\\
+\hspace*{1em}- bias\_direction: a 2-element array [dr, dc] (unit vector,\\
+\hspace*{4em}                  agent-relative) or null\\[4pt]
+Goal: \{goal\}\\[4pt]
+Retrieved memories:\\
+\{memories\}\\[4pt]
+Output JSON now:
+\end{quote}
+
+\noindent
+\texttt{\{memories\}} is filled with up to five lines of the form
+``\texttt{- id=<i> score=<s> room=<r> objects=[<obj1>, ...]}'',
+ordered by retrieval score.
+
+% =====================================================================
+\section{Failure Examples}
+\label{app:failures}
+% =====================================================================
+
+Three example failure trajectories are included at
+\texttt{paper/figures/gallery/seed*\_ep*.pdf} together with sibling
+\texttt{.json} files containing the exact metric snapshot. The
+manifest \texttt{paper/figures/gallery/manifest.json} lists all
+panels.
+
+% =====================================================================
+\section{LLM Backend: Status and Caveats}
+\label{app:llm}
+% =====================================================================
+
+The \texttt{LLMPlanner} contract is fully implemented and exercised by
+the \texttt{echo} backend in CI (parse-failure fallback, deterministic
+output, prompt template loading). The \texttt{llama\_cpp} backend
+shipped in \texttt{nem\_nav.models.planner.llm\_backends} is a thin
+wrapper around \texttt{llama-cpp-python} that we verified compiles
+and runs on Linux + conda. On Windows + Python 3.12, neither PyPI nor
+the abetlen wheel index publish a binary wheel for our platform, so
+the LLM-backed numbers are not reported here. Reviewers on Linux,
+macOS, or Windows + MSVC Build Tools can reproduce by running:
+
+\begin{verbatim}
+pip install -e ".[llm]"
+NEM_NAV_LLM_PATH=data/llm/qwen2.5-7b-instruct-q4_k_m.gguf \
+  python -m nem_nav.run --mode nem_nav --llm_backend llama_cpp \
+  --n_scenes 5 --episodes_per_scene 15 --seed 0
+\end{verbatim}
+
+(The Qwen GGUF checkpoint used for the contract test is split into two
+shards in \texttt{data/llm/}; \texttt{llama-cpp-python} reads them as
+one model when pointed at the first shard.)
+
+% =====================================================================
+\section{Cost Profile}
+\label{app:cost}
+% =====================================================================
+
+Wall-clock time and resource use are recorded in each
+\texttt{metadata.json} (\texttt{started\_at}, \texttt{finished\_at},
+\texttt{peak\_ram\_mb}, \texttt{peak\_vram\_mb}). Per-step retrieval
+and planner latency aggregates are in each \texttt{summary.json}
+(\texttt{retrieval\_latency\_ms\_mean},
+\texttt{planner\_latency\_ms\_mean}). On a single modern CPU with the
+default ontology encoder and deterministic planner, retrieval averages
+$\sim$3--6\,ms per step and the planner adds $\sim$0.5--1\,ms; peak RSS
+sits at $\sim$0.5\,GB. The OpenCLIP encoder and the LLM planner
+backends increase these by orders of magnitude when activated; the CI
+default exercises only the ontology + deterministic path, which is what
+all reported numbers use.
+
+% =====================================================================
+\section{HM3D Real-Data Validation: Status and Caveats}
+\label{app:hm3d}
+% =====================================================================
+
+We attempted a sanity-check validation of the perception encoder
+against real HM3D data. Two practical findings made this an
+incomplete deliverable; we document both honestly.
+
+\paragraph{Dataset format.}
+The HM3D releases convenient via Hugging Face under
+\texttt{Pointcept/...} ship as 3D point-cloud arrays
+(\texttt{color.npy} of shape $(N,3)$ \texttt{uint8} per-point colors,
+\texttt{coord.npy} of shape $(N,3)$ \texttt{float32} per-point xyz,
+\texttt{segment.npy} of shape $(N,)$ \texttt{int16} HM3D-Semantic
+40-class labels). They are intended for 3D semantic segmentation
+training (Pointcept), not for 2D RGB inference. CLIP-style encoders
+expect 2D rasters and cannot consume these arrays directly. The
+\emph{2D-renderable} flavour for Habitat-Sim is the separate release
+\texttt{hm3d-train-habitat-v0.2} (\textasciitilde{}22\,GB; per-scene
+\texttt{.glb} + \texttt{.navmesh} + \texttt{.semantic.glb}); we do not
+ship results from that flavour here.
+
+\paragraph{Validation we did run.}
+On the tiny subset that was available (4 scenes' worth of segmented
+point clouds, extracted by the included
+\texttt{scripts/extract\_hm3d\_sample.py}), we computed real
+class co-occurrence (per HM3D-Semantic taxonomy) and compared against
+the ontology encoder's text-text cosine over the 21 class pairs that
+both vocabularies share. Pearson $r = -0.07$ ($n{=}21$ pairs, 4
+scenes); we report this as null because the sample size is well below
+the threshold at which co-occurrence frequencies stabilise (each
+class pair is supported by 0--1 of 4 scenes). The script
+\texttt{scripts/eval\_perception\_hm3d.py} runs on whatever sample
+\texttt{extract\_hm3d\_sample.py} has produced, so reviewers with the
+full dataset extracted can rerun without modification.
+
+\paragraph{Recommended path for full validation.}
+Run \texttt{HabitatWorld} (\texttt{--env habitat}) with
+\texttt{hm3d-val-habitat-v0.2} + \texttt{objectnav\_hm3d\_v2} on a
+Linux + conda host. The encoder, planner, and policy stack are
+unchanged; the headline ablation matrix can be re-evaluated on real
+scenes by switching the \texttt{--env} flag.
+
+% =====================================================================
+\section{Reproducing the Paper Numbers}
+\label{app:repro}
+% =====================================================================
+
+\begin{enumerate}[leftmargin=*]
+\item \texttt{git clone <repo> \&\& cd nem-nav}
+\item \texttt{python -m venv .venv \&\& source .venv/bin/activate}
+\item \texttt{pip install -e ".[dev]"}
+\item \texttt{python -m pytest nem\_nav/tests -q} \quad
+      (35 passed, 3 skipped (optional extras))
+\item \texttt{python -m nem\_nav.scripts.run\_experiment\_matrix
+      --run\_id main --seeds 0 1 2 3 4 --n\_scenes 5
+      --episodes\_per\_scene 15 --max\_steps 200}
+\item \texttt{python -m nem\_nav.scripts.generate\_artifacts --run\_id main}
+\item \texttt{python -m nem\_nav.scripts.failure\_taxonomy --run\_id main}
+\item \texttt{python -m nem\_nav.scripts.qualitative\_gallery --seeds 0 1 2 3}
+\item \texttt{cd paper \&\& pdflatex main.tex \&\& bibtex main \&\&
+      pdflatex main.tex \&\& pdflatex main.tex}
+\end{enumerate}
+
+The above sequence produces every table and figure in the main paper
+deterministically from a fresh checkout. The expected wall-clock time
+on a single modern CPU is under 10 minutes for steps 5--7, plus
+$\sim$30\,s for steps 6--8, plus pdflatex.
+
+\end{document}

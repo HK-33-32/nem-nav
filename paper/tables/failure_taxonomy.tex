@@ -1,0 +1,15 @@
+\begin{tabular}{l@{\hspace{8pt}}rrl}
+\toprule
+\textbf{Failure mode} & \textbf{\#} & \textbf{\% of fails} & \textbf{Definition} \\
+\midrule
+TIMEOUT & 4 & 30.8\,\% & Hit max\_steps without STOP \\
+STOP\_TOO\_FAR & 0 & 0.0\,\% & Stopped, goal not within radius \\
+STUCK\_LOOP & 0 & 0.0\,\% & Path length $>3\times$ shortest, never reached goal \\
+WRONG\_ROOM & 0 & 0.0\,\% & Ended near wrong-room object (planner/retrieval mismatch) \\
+COLD\_START & 9 & 69.2\,\% & First episode in scene (no memory yet) \\
+OTHER & 0 & 0.0\,\% & Other / unclassified \\
+\midrule
+\textbf{Total failures} & 13 & 100.0\,\% & --- \\
+\bottomrule
+\end{tabular}
+% Total episodes considered: 600

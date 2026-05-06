@@ -1,0 +1,308 @@
+"""Generate the polished paper-figure set in one pass.
+
+Reads ``outputs/matrix/<run_id>/aggregated.json`` and the per-seed
+summary files; emits five figures that complement the existing
+sweeps: an architecture diagram, per-seed SR/SPL boxplots, a CI
+bar chart with significance markers, a goal-class breakdown, and
+a learning-curve grid.
+
+Outputs land under ``paper/figures/``.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any, Dict, List
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.patches as mpatches  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+
+# Consistent styling.
+plt.rcParams.update({
+    "font.family": "DejaVu Sans",
+    "axes.titlesize": 10,
+    "axes.labelsize": 9,
+    "xtick.labelsize": 8,
+    "ytick.labelsize": 8,
+    "legend.fontsize": 8,
+    "savefig.dpi": 200,
+    "savefig.bbox": "tight",
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+})
+
+_PALETTE = {
+    "random": "#9aa0a6",
+    "baseline": "#5b6770",
+    "frontier_semantic": "#7d8fb3",
+    "no_memory": "#7d8fb3",
+    "no_llm": "#3f8f7a",
+    "no_graph": "#5fa55a",
+    "retrieval_only": "#2a9d8f",
+    "nem_nav": "#1f4e79",
+}
+_PRETTY = {
+    "random": "Random", "baseline": "Frontier",
+    "frontier_semantic": "Frontier+Sem",
+    "no_memory": "NEM-Nav − Mem",
+    "no_llm": "NEM-Nav − LLM",
+    "no_graph": "NEM-Nav − Graph",
+    "retrieval_only": "Retrieval-only",
+    "nem_nav": "NEM-Nav (full)",
+}
+_MODE_ORDER = ["random", "baseline", "frontier_semantic",
+               "no_memory", "no_llm", "no_graph",
+               "retrieval_only", "nem_nav"]
+
+
+# ---------------------------------------------------------------- arch diagram
+
+def architecture_diagram(out_path: Path) -> None:
+    fig, ax = plt.subplots(figsize=(7.5, 3.4))
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 5)
+    ax.axis("off")
+
+    def block(x, y, w, h, label, fc):
+        ax.add_patch(mpatches.FancyBboxPatch(
+            (x, y), w, h, boxstyle="round,pad=0.04,rounding_size=0.12",
+            linewidth=1.2, edgecolor="#222", facecolor=fc,
+        ))
+        ax.text(x + w / 2, y + h / 2, label, ha="center", va="center",
+                fontsize=9.5, fontweight="bold")
+
+    def arrow(x0, y0, x1, y1, label=None):
+        ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
+                    arrowprops=dict(arrowstyle="->", lw=1.0, color="#444"))
+        if label:
+            ax.text((x0 + x1) / 2, (y0 + y1) / 2 + 0.12, label,
+                    ha="center", va="bottom", fontsize=7.5, color="#333",
+                    style="italic")
+
+    block(0.2, 1.9, 1.8, 1.2, "RGB / Depth\nObservation", "#e8f0fa")
+    block(2.6, 1.9, 1.7, 1.2, "VLM\nEncoder", "#dde8ee")
+    block(5.1, 3.2, 1.9, 1.2, "FAISS\nEpisodic Memory", "#f6e7c8")
+    block(5.1, 0.6, 1.9, 1.2, "Semantic\nGraph", "#e2dff0")
+    block(7.7, 3.2, 1.9, 1.2, "Retrieval\n(MMR)", "#f5d6b8")
+    block(7.7, 0.6, 1.9, 1.2, "Structured\nPlanner", "#cfe5d6")
+    block(10.2, 1.9, 1.5, 1.2, "Action\nScore", "#cfd8e3")
+
+    arrow(2.0, 2.5, 2.6, 2.5)
+    arrow(4.3, 2.5, 5.1, 3.6, "store ϕ(o)")
+    arrow(4.3, 2.5, 5.1, 1.4, "observe (cluster)")
+    arrow(7.0, 3.7, 7.7, 3.7, "top-K")
+    arrow(7.0, 1.0, 7.7, 1.0, "graph prior")
+    arrow(9.6, 3.7, 10.2, 2.7)
+    arrow(9.6, 1.0, 10.2, 2.3)
+    arrow(4.3, 2.5, 10.2, 2.5)  # frontier+semantic skip-line
+
+    ax.text(4.3, 2.78, "frontier  +  semantic", ha="left", va="bottom",
+            fontsize=7, color="#555", style="italic")
+    ax.text(6, 4.65, "$S(c)=w_f F(c)+w_s\\cos(\\phi_g,\\phi_c)+w_m M(c)+w_g G(c)+w_p P(c)$",
+            ha="center", va="center", fontsize=10, color="#1f4e79")
+    fig.savefig(out_path)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- boxplots
+
+def per_seed_boxplot(payload: Dict[str, Any], out_path: Path,
+                     metric: str = "spl", ylabel: str = "SPL") -> None:
+    matrix = payload["main_matrix"]
+    modes = [m for m in _MODE_ORDER if m in matrix]
+    data = [matrix[m]["all"].get(f"{metric}_values", []) for m in modes]
+
+    fig, ax = plt.subplots(figsize=(7, 3.0))
+    bp = ax.boxplot(data, patch_artist=True, widths=0.55,
+                    medianprops=dict(color="#222", lw=1.4),
+                    boxprops=dict(linewidth=1.0, edgecolor="#222"),
+                    whiskerprops=dict(color="#444"),
+                    capprops=dict(color="#444"),
+                    flierprops=dict(marker="o", markersize=4,
+                                    markerfacecolor="#888", markeredgecolor="#444"))
+    for patch, mode in zip(bp["boxes"], modes):
+        patch.set_facecolor(_PALETTE[mode])
+        patch.set_alpha(0.85)
+    # Overlay individual seed points.
+    for i, vals in enumerate(data, start=1):
+        if not vals:
+            continue
+        jitter = (np.random.default_rng(0).uniform(-0.12, 0.12, size=len(vals)))
+        ax.scatter([i + j for j in jitter], vals, s=14, color="#222",
+                   alpha=0.7, zorder=3, edgecolor="white", linewidth=0.4)
+    ax.set_xticks(range(1, len(modes) + 1))
+    ax.set_xticklabels([_PRETTY[m] for m in modes], rotation=18, ha="right")
+    ax.set_ylabel(ylabel)
+    ax.set_ylim(-0.02, 1.02)
+    ax.grid(axis="y", alpha=0.3)
+    fig.savefig(out_path)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- CI bar chart
+
+def ci_bar_chart(payload: Dict[str, Any], out_path: Path) -> None:
+    matrix = payload["main_matrix"]
+    sig = matrix.get("_significance_vs_baseline", {}).get("spl", {})
+    modes = [m for m in _MODE_ORDER if m in matrix]
+    means_sr = [matrix[m]["all"]["success_mean"] for m in modes]
+    cis_sr = [matrix[m]["all"].get("success_ci95", 0) for m in modes]
+    means_spl = [matrix[m]["all"]["spl_mean"] for m in modes]
+    cis_spl = [matrix[m]["all"].get("spl_ci95", 0) for m in modes]
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.4), sharey=True)
+    x = np.arange(len(modes))
+    for ax, ys, cis, ylabel in [
+        (axes[0], means_sr, cis_sr, "Success Rate"),
+        (axes[1], means_spl, cis_spl, "SPL"),
+    ]:
+        bars = ax.bar(x, ys, yerr=cis, color=[_PALETTE[m] for m in modes],
+                      edgecolor="#222", linewidth=0.8,
+                      error_kw=dict(lw=1.0, capsize=3, ecolor="#444"))
+        # Significance stars above each bar (from t-test).
+        for i, (m, bar, mean) in enumerate(zip(modes, bars, ys)):
+            if m == "baseline":
+                continue
+            p = float(sig.get(m, {}).get("p_value", 1.0))
+            star = ("†" if p < 0.001 else
+                    "**" if p < 0.01 else
+                    "*" if p < 0.05 else "")
+            if star:
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        mean + (cis[i] if cis[i] else 0.02) + 0.02,
+                        star, ha="center", va="bottom",
+                        fontsize=11, color="#222")
+        ax.set_xticks(x)
+        ax.set_xticklabels([_PRETTY[m] for m in modes], rotation=18, ha="right")
+        ax.set_ylim(0, 1.08)
+        ax.set_ylabel(ylabel)
+        ax.grid(axis="y", alpha=0.3)
+    axes[0].set_title("Success Rate ↑ (mean ± 95% CI)")
+    axes[1].set_title("SPL ↑ (mean ± 95% CI)")
+    fig.tight_layout()
+    fig.savefig(out_path)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- per-class
+
+def per_goal_class_plot(run_root: Path, out_path: Path,
+                        modes: List[str] = None) -> None:
+    if modes is None:
+        modes = ["baseline", "no_memory", "retrieval_only", "nem_nav"]
+    # Aggregate per-class SPL for each mode across seeds.
+    per_mode_class: Dict[str, Dict[str, List[float]]] = {m: {} for m in modes}
+    for mode in modes:
+        for sd in sorted((run_root / "runs").glob(f"{mode}_seed*")):
+            sm = sd / "summary.json"
+            if not sm.exists():
+                continue
+            d = json.loads(sm.read_text())
+            for cls, agg in d.get("per_goal_class", {}).items():
+                per_mode_class[mode].setdefault(cls, []).append(
+                    float(agg.get("spl", 0.0))
+                )
+    classes = sorted(set().union(*[set(d) for d in per_mode_class.values()]))
+    if not classes:
+        return
+    n_cls = len(classes)
+    bar_w = 0.85 / max(len(modes), 1)
+
+    fig, ax = plt.subplots(figsize=(max(7, 0.45 * n_cls), 3.2))
+    x = np.arange(n_cls)
+    for i, mode in enumerate(modes):
+        ys = [float(np.mean(per_mode_class[mode].get(cls, [0])))
+              for cls in classes]
+        ax.bar(x + i * bar_w, ys, bar_w, label=_PRETTY[mode],
+               color=_PALETTE[mode], edgecolor="#222", linewidth=0.5)
+    ax.set_xticks(x + bar_w * (len(modes) - 1) / 2)
+    ax.set_xticklabels(classes, rotation=40, ha="right")
+    ax.set_ylabel("Mean SPL")
+    ax.set_ylim(0, 1.05)
+    ax.set_title("Per-goal-class SPL by mode")
+    ax.legend(loc="upper right", ncol=2, fontsize=7)
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(out_path)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- learning curve grid
+
+def learning_curve_grid(run_root: Path, out_path: Path,
+                        modes: List[str] = None) -> None:
+    if modes is None:
+        modes = ["baseline", "frontier_semantic", "no_memory",
+                 "retrieval_only", "nem_nav"]
+    fig, ax = plt.subplots(figsize=(5.0, 3.0))
+    for mode in modes:
+        per_ep: Dict[int, List[float]] = {}
+        for sd in sorted((run_root / "runs").glob(f"{mode}_seed*")):
+            ep_path = sd / "episodes.jsonl"
+            if not ep_path.exists():
+                continue
+            for line in ep_path.read_text().splitlines():
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                ep = int(rec.get("episode", 0))
+                m = rec.get("metrics", {})
+                spl = float(m.get("shortest_path_length", 0))
+                pl = float(m.get("path_length", 0))
+                s = int(m.get("success", 0))
+                if pl > 0 and spl > 0 and s == 1:
+                    per_ep.setdefault(ep, []).append(spl / max(pl, spl))
+                else:
+                    per_ep.setdefault(ep, []).append(0.0)
+        if not per_ep:
+            continue
+        eps = sorted(per_ep.keys())
+        means = [float(np.mean(per_ep[e])) for e in eps]
+        sds = [float(np.std(per_ep[e], ddof=1)) if len(per_ep[e]) > 1 else 0
+               for e in eps]
+        ax.fill_between(eps, [m - s for m, s in zip(means, sds)],
+                        [m + s for m, s in zip(means, sds)],
+                        color=_PALETTE[mode], alpha=0.15)
+        ax.plot(eps, means, "-o", label=_PRETTY[mode],
+                color=_PALETTE[mode], lw=1.6, markersize=3)
+    ax.set_xlabel("Episode index within scene")
+    ax.set_ylabel("Mean SPL (± std across seeds)")
+    ax.set_ylim(0, 1.02)
+    ax.grid(alpha=0.3)
+    ax.legend(loc="lower right", fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out_path)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- main
+
+def main() -> None:
+    p = argparse.ArgumentParser()
+    p.add_argument("--run_id", default="main")
+    p.add_argument("--paper_dir", default="paper")
+    args = p.parse_args()
+
+    run_root = Path("outputs/matrix") / args.run_id
+    if not run_root.exists():
+        raise SystemExit(f"missing {run_root}; run experiment matrix first")
+    payload = json.loads((run_root / "aggregated.json").read_text())
+    figs = Path(args.paper_dir) / "figures"
+    figs.mkdir(parents=True, exist_ok=True)
+
+    architecture_diagram(figs / "architecture.pdf")
+    per_seed_boxplot(payload, figs / "boxplot_spl.pdf", "spl", "SPL")
+    per_seed_boxplot(payload, figs / "boxplot_sr.pdf", "success", "Success Rate")
+    ci_bar_chart(payload, figs / "ci_bars.pdf")
+    per_goal_class_plot(run_root, figs / "per_goal_class.pdf")
+    learning_curve_grid(run_root, figs / "learning_curve_grid.pdf")
+    print(f"[done] wrote 6 figures to {figs}")
+
+
+if __name__ == "__main__":
+    main()

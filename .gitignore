@@ -1,0 +1,36 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env
+outputs/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.DS_Store
+
+# LaTeX build artefacts
+paper/main.aux
+paper/main.bbl
+paper/main.blg
+paper/main.log
+paper/main.out
+paper/main.toc
+paper/main.pdf
+paper/appendix.aux
+paper/appendix.bbl
+paper/appendix.blg
+paper/appendix.log
+paper/appendix.out
+paper/appendix.pdf
+
+# Large external data — the data/README.md describes the expected layout
+# but the actual files (HM3D scenes, GGUF model weights, ObjectNav
+# episodes) must never be committed.
+data/hm3d/
+data/hm3d_sample/
+data/scenes/
+data/episodes/
+data/llm/
+nem_nav/data/cache/
+nem_nav/data/processed/

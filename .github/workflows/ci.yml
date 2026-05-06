@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    name: pytest + lint (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        run: ruff check nem_nav
+
+      - name: Run unit tests
+        run: pytest nem_nav/tests -q --maxfail=1
+
+      - name: Smoke run (baseline)
+        run: |
+          python -m nem_nav.run --mode baseline --n_scenes 1 --episodes_per_scene 2 \
+              --out outputs/ci_smoke_baseline
+
+      - name: Smoke run (full nem_nav)
+        run: |
+          python -m nem_nav.run --mode nem_nav --n_scenes 1 --episodes_per_scene 2 \
+              --out outputs/ci_smoke_nem_nav

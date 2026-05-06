@@ -1,0 +1,9 @@
+{
+  "seed": 3,
+  "episode": 5,
+  "goal_class": "computer",
+  "success": true,
+  "steps": 25,
+  "path_length": 19.0,
+  "shortest_path_length": 19.0
+}

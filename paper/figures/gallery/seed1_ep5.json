@@ -1,0 +1,9 @@
+{
+  "seed": 1,
+  "episode": 5,
+  "goal_class": "dining_table",
+  "success": true,
+  "steps": 32,
+  "path_length": 25.0,
+  "shortest_path_length": 25.0
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "path": "paper\\figures\\gallery\\seed0_ep5.pdf",
+    "seed": 0,
+    "episode": 5,
+    "goal_class": "fridge",
+    "success": true,
+    "steps": 32,
+    "path_length": 24.0,
+    "shortest_path_length": 22.0
+  },
+  {
+    "path": "paper\\figures\\gallery\\seed1_ep5.pdf",
+    "seed": 1,
+    "episode": 5,
+    "goal_class": "dining_table",
+    "success": true,
+    "steps": 32,
+    "path_length": 25.0,
+    "shortest_path_length": 25.0
+  },
+  {
+    "path": "paper\\figures\\gallery\\seed2_ep5.pdf",
+    "seed": 2,
+    "episode": 5,
+    "goal_class": "chair",
+    "success": true,
+    "steps": 35,
+    "path_length": 24.0,
+    "shortest_path_length": 22.0
+  },
+  {
+    "path": "paper\\figures\\gallery\\seed3_ep5.pdf",
+    "seed": 3,
+    "episode": 5,
+    "goal_class": "computer",
+    "success": true,
+    "steps": 25,
+    "path_length": 19.0,
+    "shortest_path_length": 19.0
+  }
+]

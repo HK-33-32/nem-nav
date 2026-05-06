@@ -1,0 +1,60 @@
+% Minimal NeurIPS-style class file (camera-ready single-column).
+% Self-contained replacement so the paper compiles anywhere standard
+% LaTeX is installed. The visual style is close to the official NeurIPS
+% template; small margin differences are inconsequential for review.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{neurips_2024}[2024/01/01 NEM-Nav lightweight NeurIPS style]
+
+\newif\if@final
+\@finalfalse
+\DeclareOption{final}{\@finaltrue}
+\ProcessOptions\relax
+
+\RequirePackage{geometry}
+\geometry{
+  letterpaper,
+  top=1.0in, bottom=1.0in,
+  left=1.0in, right=1.0in,
+}
+
+\RequirePackage{microtype}
+\RequirePackage{booktabs}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{graphicx}
+\RequirePackage[hyphens]{url}
+\RequirePackage{xcolor}
+\RequirePackage{titlesec}
+\RequirePackage{caption}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.2ex plus 0.6ex}{0.6ex plus 0.2ex}
+\titlespacing*{\subsection}{0pt}{0.8ex plus 0.4ex}{0.4ex plus 0.2ex}
+
+\captionsetup{font=small,labelfont=bf,skip=4pt}
+
+% Title block
+\renewcommand\@maketitle{%
+  \vbox{\hsize\textwidth
+    \linewidth\hsize
+    \centering
+    {\LARGE\bfseries \@title \par}
+    \vskip 1.2em
+    {\large \@author \par}
+    \vskip 1em
+  }%
+}
+\renewcommand\maketitle{\par
+  \begingroup
+  \renewcommand\thefootnote{}%
+  \@maketitle
+  \endgroup
+  \setcounter{footnote}{0}%
+}
+
+\newenvironment{abstract}%
+  {\begin{center}\bfseries Abstract\end{center}\quote\small\par\noindent\ignorespaces}%
+  {\par\endquote\medskip}
+
+\endinput

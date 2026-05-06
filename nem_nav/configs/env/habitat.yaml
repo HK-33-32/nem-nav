@@ -1,0 +1,17 @@
+# Habitat backend configuration. Loaded when --env habitat is selected.
+# Paths are relative to the repository root unless absolute.
+#
+# Replace the values below with your local dataset locations. See
+# data/README.md for the expected layout.
+
+scene_path: data/scenes/hm3d/val/00800-TEEsavR23oF/TEEsavR23oF.basis.glb
+episodes_path: data/episodes/objectnav_hm3d_v2/val/content/TEEsavR23oF.json.gz
+
+# Action / sensor parameters.
+forward_step: 0.25       # metres per FORWARD action
+turn_angle_deg: 30.0     # degrees per TURN action
+sensor_height: 1.5       # metres above the floor
+sensor_resolution: [256, 256]
+sensor_hfov_deg: 90.0
+success_distance: 1.0    # metres; STOP succeeds within this radius
+max_steps: 500

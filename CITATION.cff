@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "NEM-Nav: Neuro-Symbolic Episodic Memory for Zero-Shot Object-Goal Navigation"
+version: 0.1.0
+date-released: 2024-12-01
+license: MIT
+repository-code: "https://github.com/anonymous/nem-nav"
+type: software
+authors:
+  - given-names: "Anonymous"
+    family-names: "Authors"
+keywords:
+  - object-goal-navigation
+  - embodied-ai
+  - episodic-memory
+  - vision-language
+  - neuro-symbolic
+abstract: >-
+  NEM-Nav is a modular system for zero-shot object-goal navigation that
+  augments classical frontier exploration with three inter-operable
+  priors -- a FAISS episodic memory of dense observation embeddings, a
+  topological semantic graph that compresses repeated experiences, and a
+  deterministic structured planner that converts a short goal text into
+  a target-room hypothesis. All four signals are linearly combined into
+  an interpretable per-cell action score so that every component can be
+  ablated cleanly. Evaluation uses a procedurally generated semantic
+  apartment testbed with hand-curated room/object ontology,
+  partial-observability cone perception, and oracle shortest-path
+  supervision for SPL.

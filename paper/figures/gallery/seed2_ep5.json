@@ -1,0 +1,9 @@
+{
+  "seed": 2,
+  "episode": 5,
+  "goal_class": "chair",
+  "success": true,
+  "steps": 35,
+  "path_length": 24.0,
+  "shortest_path_length": 22.0
+}

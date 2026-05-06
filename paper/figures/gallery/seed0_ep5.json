@@ -1,0 +1,9 @@
+{
+  "seed": 0,
+  "episode": 5,
+  "goal_class": "fridge",
+  "success": true,
+  "steps": 32,
+  "path_length": 24.0,
+  "shortest_path_length": 22.0
+}

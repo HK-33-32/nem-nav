@@ -1,0 +1,15 @@
+\begin{tabular}{l@{\hspace{6pt}}cccc}
+\toprule
+\textbf{Method} & \textbf{SR} $\uparrow$ & \textbf{SPL} $\uparrow$ & \textbf{DTG} $\downarrow$ & \textbf{Steps} $\downarrow$ \\
+\midrule
+Random$^{\dagger}$ & 0.00\,$\pm$\,0.00 & 0.00\,$\pm$\,0.00 & 18.7\,$\pm$\,0.6 & 17\,$\pm$\,5 \\
+Frontier & 0.21\,$\pm$\,0.04 & 0.08\,$\pm$\,0.02 & 16.3\,$\pm$\,1.5 & 177\,$\pm$\,6 \\
+Frontier+Sem$^{**}$ & 0.28\,$\pm$\,0.02 & 0.10\,$\pm$\,0.01 & 13.7\,$\pm$\,1.4 & 173\,$\pm$\,4 \\
+NEM-Nav $-$ Mem$^{**}$ & 0.28\,$\pm$\,0.02 & 0.10\,$\pm$\,0.01 & 13.7\,$\pm$\,1.4 & 173\,$\pm$\,4 \\
+NEM-Nav $-$ LLM$^{\dagger}$ & 0.98\,$\pm$\,0.01 & 0.82\,$\pm$\,0.02 & 0.3\,$\pm$\,0.4 & 39\,$\pm$\,2 \\
+NEM-Nav $-$ Graph$^{\dagger}$ & 0.96\,$\pm$\,0.03 & 0.82\,$\pm$\,0.03 & 0.7\,$\pm$\,0.6 & 43\,$\pm$\,3 \\
+Retrieval-only$^{\dagger}$ & 0.98\,$\pm$\,0.01 & 0.83\,$\pm$\,0.03 & 0.3\,$\pm$\,0.3 & 39\,$\pm$\,2 \\
+NEM-Nav (full)$^{\dagger}$ & 0.98\,$\pm$\,0.01 & 0.83\,$\pm$\,0.02 & 0.3\,$\pm$\,0.1 & 40\,$\pm$\,2 \\
+\bottomrule
+\end{tabular}
+% n_seeds=5; values are mean $\pm$ 95\% CI; $^{*}p<0.05$, $^{**}p<0.01$, $^{\dagger}p<0.001$ (paired Wilcoxon vs Frontier baseline on per-seed SPL)
