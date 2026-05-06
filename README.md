@@ -207,7 +207,7 @@ paper/
   environment, graph, end-to-end runs, world protocol, OpenCLIP
   backend, LLM backends.
 - **Single-CPU friendly** — full main matrix in under 10 minutes;
-  GPU is optional for the OpenCLIP and LLM extras.
+  GPU is optional for the OpenCLIP and LM extras.
 
 ## Citation
 
